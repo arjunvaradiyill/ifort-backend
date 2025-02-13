@@ -7,7 +7,7 @@ dotenv.config(); // Load environment variables
 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON
-app.use(cors()); // Enable CORS for frontend communication
+app.use(cors({origin:"https://ifort-front-end.onrender.com/"})); // Enable CORS for frontend communication
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ProductsDB";
 
