@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json()); // Middleware to parse JSON
 app.use(cors({origin:"https://ifort-front-end.onrender.com/"})); // Enable CORS for frontend communication
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ProductsDB";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://arjunvaradiyil203:arjun123@mern.wxpyu.mongodb.net/ProductsDB";
 
 // ✅ Improved MongoDB Connection
 async function connectDB() {
