@@ -11,21 +11,24 @@ app.use(cors()); // Enable CORS for frontend communication
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/ProductsDB";
 
-// ✅ Improved MongoDB Connection with Proper Error Handling
+// ✅ Improved MongoDB Connection
 async function connectDB() {
   try {
     await mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 3000, // Avoid indefinite waiting
+      serverSelectionTimeoutMS: 3000, // Prevent indefinite waiting
     });
     console.log("✅ MongoDB Connected");
   } catch (err) {
-    console.error("❌ MongoDB Connection Error:", err);
+    console.error("❌ MongoDB Connection Error:", err.message);
     process.exit(1); // Stop the server if DB connection fails
   }
 }
 connectDB();
+
+// ✅ Handle MongoDB Connection Errors
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB Connection Error:", err.message);
+});
 
 // ✅ Product Schema
 const productSchema = new mongoose.Schema({
@@ -40,9 +43,9 @@ const Product = mongoose.model("Product", productSchema);
 app.post("/api/products", async (req, res) => {
   try {
     const { name, price, description } = req.body;
-    if (!name || !price || !description) {
-      return res.status(400).json({ message: "❌ All fields are required" });
-    }
+    if (!name) return res.status(400).json({ message: "❌ Name is required" });
+    if (!price) return res.status(400).json({ message: "❌ Price is required" });
+    if (!description) return res.status(400).json({ message: "❌ Description is required" });
 
     const newProduct = new Product({ name, price, description });
     const savedProduct = await newProduct.save();
@@ -52,22 +55,27 @@ app.post("/api/products", async (req, res) => {
       product: savedProduct,
     });
   } catch (error) {
-    console.error("❌ Error adding product:", error);
-    res.status(500).json({ message: "❌ Error adding product", error });
+    console.error("❌ Error adding product:", error.message);
+    res.status(500).json({ message: "❌ Internal server error", error: error.message });
   }
 });
 
-// ✅ API Route to Fetch All Products (Fixed)
+// ✅ API Route to Fetch All Products
 app.get("/api/products", async (req, res) => {
   try {
     const products = await Product.find();
-    res.status(200).json(products); // ✅ Added missing response
+    res.status(200).json(products);
   } catch (error) {
-    console.error("❌ Error fetching products:", error);
-    res.status(500).json({ message: "❌ Error fetching products", error });
+    console.error("❌ Error fetching products:", error.message);
+    res.status(500).json({ message: "❌ Error fetching products", error: error.message });
   }
 });
 
-// ✅ Server Running on Correct Port
+// ✅ Handle Undefined Routes
+app.use((req, res) => {
+  res.status(404).json({ message: "❌ Route not found" });
+});
+
+// ✅ Ensure Correct Port for Deployment
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));
